@@ -28,6 +28,7 @@
 #include <ros/ros.h>
 #include <tf/transform_broadcaster.h>
 #include <mocap_base/KalmanFilter.h>
+#include <mocap_base/Marker.h>
 
 namespace mocap{
 
@@ -124,6 +125,34 @@ class Subject {
     ros::Publisher pub_vel;
 };
 
+class Markers {
+  public:
+     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+    /*
+     * @brief Constructor and Destructor
+     */
+    Markers();
+    ~Markers() {}
+
+    void init(ros::NodeHandle* nptr, const std::string& p_frame);
+
+    void processNewMeasurement(
+        const double& time,
+        const std::vector<mocap_base::Marker>& markers
+        );
+
+  private:
+    // Disable copy constructor and assign operator
+    Markers(const Markers&);
+    Markers& operator=(const Markers&);
+
+    // Publisher for the subject
+    ros::NodeHandle* nh_ptr;
+    std::string parent_frame;
+    ros::Publisher pub;
+};
+
 /*
  * @brief: MoCapDriverBase Base class for the drivers
  *    of different motion capture system (e.g. vicon
@@ -204,6 +233,9 @@ class MoCapDriverBase{
 
     // Observed rigid bodies (contains those lose tracking)
     std::map<std::string, Subject::SubjectPtr> subjects;
+
+    // Observed markers
+    Markers markers;
 
     // Publish tf
     bool publish_tf;

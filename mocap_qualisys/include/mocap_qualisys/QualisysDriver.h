@@ -118,6 +118,9 @@ class QualisysDriver: public MoCapDriverBase{
     // Average time interval between two frames
     double frame_interval;
 
+    // Track any kind of markers
+    bool track_markers;
+
     // time point for last frame
     unsigned long last_packet_time;
 

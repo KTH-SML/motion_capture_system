@@ -4,6 +4,9 @@
   <arg name="frame_rate" default="0"/>
   <arg name="max_accel" default="10.0"/>
   <arg name="publish_tf" default="true"/>
+  <arg name="track_6_dofs" default="true"/>
+  <arg name="track_labeled_markers" default="false"/>
+  <arg name="track_unlabeled_markers" default="false"/>
   <arg name="fixed_frame_id" default="mocap"/>
   <arg name="udp_port" default="0"
     doc="UDP port can be set to -1 to request a TCP stream,
@@ -19,6 +22,9 @@
     <param name="frame_rate" value="$(arg frame_rate)"/>
     <param name="max_accel" value="$(arg max_accel)"/>
     <param name="publish_tf" value="$(arg publish_tf)"/>
+    <param name="track_6_dofs" value="$(arg track_6_dofs)"/>
+    <param name="track_labeled_markers" value="$(arg track_labeled_markers)"/>
+    <param name="track_unlabeled_markers" value="$(arg track_unlabeled_markers)"/>
     <param name="fixed_frame_id" value="$(arg fixed_frame_id)"/>
     <param name="udp_port" value="$(arg udp_port)"/>
     <param name="qtm_protocol_version" value="$(arg qtm_protocol_version)"/>

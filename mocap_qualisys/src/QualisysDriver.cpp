@@ -22,6 +22,7 @@
 #include <Eigen/Geometry>
 #include <tf_conversions/tf_eigen.h>
 #include <mocap_qualisys/QualisysDriver.h>
+#include <geometry_msgs/Point.h>
 
 using namespace std;
 using namespace Eigen;
@@ -45,6 +46,13 @@ bool QualisysDriver::init() {
   int int_udp_port;
   nh.param("udp_port", int_udp_port, -1);
   nh.param("qtm_protocol_version", qtm_protocol_version, 18);
+  bool track_6_dofs;
+  bool track_labeled_markers;
+  bool track_unlabeled_markers;
+  nh.param("track_6_dofs", track_6_dofs, true);
+  nh.param("track_labeled_markers", track_labeled_markers, false);
+  nh.param("track_unlabeled_markers", track_unlabeled_markers, false);
+
 
   if (server_address.empty()){
     ROS_FATAL("server_address parameter empty");
@@ -81,13 +89,27 @@ bool QualisysDriver::init() {
   {
     ROS_INFO("Streaming data to UDP port %i", udp_stream_port);
   }
-  // Get 6DOF settings
   bool bDataAvailable = false;
-  port_protocol.Read6DOFSettings(bDataAvailable);
-  if (bDataAvailable == false) {
-    ROS_FATAL_STREAM("Reading 6DOF body settings failed during intialization\n"
-                  << "QTM error: " << port_protocol.GetErrorString());
-    return false;
+  // Get 6DOF settings
+  if(track_6_dofs) {
+    port_protocol.Read6DOFSettings(bDataAvailable);
+    if (bDataAvailable == false) {
+      ROS_FATAL_STREAM("Reading 6DOF body settings failed during intialization\n"
+                    << "QTM error: " << port_protocol.GetErrorString());
+      return false;
+    }
+  }
+  // Get 3D marker settings
+  track_markers = track_labeled_markers || track_unlabeled_markers;
+  if(track_markers) {
+    markers.init(&nh, fixed_frame_id);
+    bDataAvailable = false;
+    port_protocol.Read3DSettings(bDataAvailable);
+    if (bDataAvailable == false) {
+      ROS_FATAL_STREAM("Reading 3D marker settings failed during intialization\n"
+                    << "QTM error: " << port_protocol.GetErrorString());
+      return false;
+    }
   }
   // Read system settings
   if (!port_protocol.ReadCameraSystemSettings()){
@@ -115,7 +137,10 @@ bool QualisysDriver::init() {
       frame_rate, // nRateArg
       udp_stream_port, // nUDPPort
       nullptr, // nUDPAddr
-      CRTProtocol::cComponent6d);
+      ( (track_6_dofs ? CRTProtocol::cComponent6d : 0x0) |
+        (track_labeled_markers ? CRTProtocol::cComponent3dRes : 0x0) |
+        (track_unlabeled_markers ? CRTProtocol::cComponent3dNoLabelsRes : 0x0 )
+      ));
   ROS_INFO("Frame rate: %i frames per second", frame_rate);
   // Calculate covariance matrices
   process_noise.topLeftCorner<6, 6>() =
@@ -213,6 +238,54 @@ void QualisysDriver::handleFrame() {
       handleSubject(i);
     }
   }
+
+  // Get markers
+  std::vector<mocap_base::Marker> marker_vec;
+  const double packet_time = prt_packet->GetTimeStamp() / 1e6;
+  const double time = start_time_local_ + (packet_time - start_time_packet_);
+
+  // Number of labeled markers
+  int labeled_marker_count = prt_packet->Get3DResidualMarkerCount();
+  for(int i = 0; i < labeled_marker_count; ++i) {
+    mocap_base::Marker marker;
+    const char* label = port_protocol.Get3DLabelName(i);
+    if(label == nullptr) {
+      ROS_WARN("unable to read label of %d-th labeled marker", i);
+    } else {
+      marker.id = label;
+    }
+    float x, y, z, r;
+    prt_packet->Get3DResidualMarker(i, x, y, z, r);
+    marker.position.x = x / 1000.;
+    marker.position.y = y / 1000.;
+    marker.position.z = z / 1000.;
+    marker.residual = r;
+    marker.tracked = isfinite(x);
+    marker.labeled = true;
+    marker_vec.push_back(marker);
+  }
+
+  // Number of unlabeled markers
+  int unlabeled_marker_count = prt_packet->Get3DNoLabelsResidualMarkerCount();
+  for(int i = 0; i < unlabeled_marker_count; ++i) {
+    mocap_base::Marker marker;
+    float x, y, z, r;
+    unsigned int id;
+    prt_packet->Get3DNoLabelsResidualMarker(i, x, y, z, id, r);
+    marker.position.x = x / 1000.;
+    marker.position.y = y / 1000.;
+    marker.position.z = z / 1000.;
+    marker.residual = r;
+    marker.tracked = isfinite(x);
+    marker.labeled = false;
+    marker.id = "Unlabeled_" + std::to_string(id);
+    marker_vec.push_back(marker);
+  }
+
+  if(track_markers) {
+    markers.processNewMeasurement(time, marker_vec);
+  }
+
   return;
 }
 

@@ -9,9 +9,11 @@
   <author>Ke Sun</author>
 
   <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>message_generation</build_depend>
   <depend>geometry_msgs</depend>
   <depend>roscpp</depend>
   <depend>eigen_conversions</depend>
+  <exec_depend>message_runtime</exec_depend>
 
   <export>
   </export>
