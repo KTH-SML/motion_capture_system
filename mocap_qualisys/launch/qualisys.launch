@@ -1,5 +1,5 @@
 <launch>
-  <arg name="server_address" default="qtm-pc.local"/>
+  <arg name="server_address" default="qtm-pc"/>
   <arg name="server_base_port" default="22222"/>
   <arg name="frame_rate" default="0"/>
   <arg name="max_accel" default="10.0"/>
