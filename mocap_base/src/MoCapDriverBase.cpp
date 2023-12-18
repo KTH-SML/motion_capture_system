@@ -20,6 +20,7 @@
 #include <geometry_msgs/TwistStamped.h>
 #include <eigen_conversions/eigen_msg.h>
 #include <mocap_base/MoCapDriverBase.h>
+#include <mocap_base/MarkerList.h>
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
 
@@ -172,6 +173,31 @@ void Subject::processNewMeasurement(
 
   pub_vel.publish(vel);
 
+  return;
+}
+
+Markers::Markers():
+  nh_ptr(nullptr),
+  parent_frame("")
+  {};
+
+void Markers::init(ros::NodeHandle* nptr, const std::string& p_frame) {
+  nh_ptr = nptr;
+  parent_frame = p_frame;
+  pub = nh_ptr->advertise<mocap_base::MarkerList>("markers", 1);
+  return;
+}
+
+void Markers::processNewMeasurement(const double& time, const std::vector<mocap_base::Marker>& markers) {
+  if(nh_ptr) {
+    mocap_base::MarkerList marker_list;
+    marker_list.markers = markers;
+    marker_list.header.frame_id = parent_frame;
+    marker_list.header.stamp = ros::Time(time);
+    pub.publish(marker_list);
+  } else {
+    ROS_WARN("Cannot publish Markers. Did you run init() first ?");
+  }
   return;
 }
 }

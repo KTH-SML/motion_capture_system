@@ -9,6 +9,19 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   geometry_msgs
   eigen_conversions
+  message_generation
+)
+
+add_message_files(
+  FILES
+  Marker.msg
+  MarkerList.msg
+)
+
+generate_messages(
+  DEPENDENCIES
+  std_msgs
+  geometry_msgs
 )
 
 catkin_package(
@@ -16,6 +29,7 @@ catkin_package(
   LIBRARIES mocap_base_driver mocap_kalman_filter
   CATKIN_DEPENDS
     geometry_msgs
+    message_runtime
   DEPENDS
   Boost EIGEN3
 )

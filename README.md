@@ -49,6 +49,12 @@ Replace `*QTM server address*` with the IP address to your QTM server.
 
      - **`publish_tf`** Set to `true` to publish transforms between the tracked bodies and the origin of the motion capture frame. Default: `true`.
 
+     - **`track_6_dofs`** Set to `true` to enable tracking bodies. Default: `true`.
+
+     - **`track_labeled_markers`** Set to `true` to enable tracking the markers that have been labeled in QTM (i.e. the one that are parts of a body, an AIM, ...). Default: `false`.
+
+     - **`track_unlabeled_markers`** Set to `true` to enable tracking the markers that have not been labeled in QTM. Default: `false`.
+
      - **`fixed_frame_id`** Frame ID for the motion capture system frame of reference (child frame ids are set to the name of the subject). Default: `mocap`
 
      - **`udp_port`** Port that the server will stream data to. `0` indicates random UPD port, `-1` random TCP port and positive values specifies a UDP port.  Default: `0`.
@@ -70,6 +76,8 @@ Connects to your local QTM server, and publishes poses, odometry and transforms 
 * **`/qualisys/{subject_name}/velocity`** ([geometry_msgs/TwistStamped])
 
    __Note:__ Replace `{subject_name}` with the name you have given the 6DOF body in QTM.
+
+* **`/qualisys/markers`** ([mocap_base/MarkerList])
 
 #### Parameters
 
@@ -97,6 +105,18 @@ Connects to your local QTM server, and publishes poses, odometry and transforms 
 
    If set to true, tf msgs for the subjects are published.
 
+* **`track_6_dofs`** (`bool`, default: `true`)
+
+   If set to `true`, enable tracking rigid-bodies (6DOFs).
+
+* **`track_labeled_markers`** (`bool`, default: `false`)
+
+   If set to `true`, enable tracking the markers that have been labeled in QTM (i.e. the one that are parts of a body, an AIM, ...).
+
+* **`track_unlabeled_markers`** (`bool`, default: `false`)
+
+   If set to `true`, enable tracking the markers that have not been labeled in QTM.
+
 * **`fixed_frame_id`** (`string`, default: `mocap`)
 
    The fixed frame ID of the tf msgs for each subject. Note that the child frame id is automatically set to the name of the subject.
@@ -115,6 +135,12 @@ TCP will be used instead of UDP.
 * **`model_list`** (`vector<string>`, default: `[]`)
 
    A vector of subjects of interest. Leave the vector empty if all subjects are to be tracked.
+
+## Custom msgs
+
+* **mocap_base/Marker** : See [mocap_base/msg/Marker.msg](mocap_base/msg/Marker.msg)
+
+* **mocap_base/MarkerList** : See [mocap_base/msg/MarkerList.msg](mocap_base/msg/MarkerList.msg)
 
 ## FAQ
 
