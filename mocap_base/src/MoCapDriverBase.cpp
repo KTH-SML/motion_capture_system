@@ -35,9 +35,14 @@ Subject::Subject(ros::NodeHandle* nptr, const string& sub_name,
   nh_ptr       (nptr),
   parent_frame (p_frame){
 
-  pub_filter = nh_ptr->advertise<nav_msgs::Odometry>(name+"/odom", 1);
-  pub_raw = nh_ptr->advertise<geometry_msgs::PoseStamped>(name+"/pose", 1);
-  pub_vel = nh_ptr->advertise<geometry_msgs::TwistStamped>(name+"/velocity", 1);
+  try {
+    pub_filter = nh_ptr->advertise<nav_msgs::Odometry>(name+"/odom", 1);
+    pub_raw = nh_ptr->advertise<geometry_msgs::PoseStamped>(name+"/pose", 1);
+    pub_vel = nh_ptr->advertise<geometry_msgs::TwistStamped>(name+"/velocity", 1);
+  } catch(ros::InvalidNameException e) {
+    ROS_ERROR_STREAM("Body name \"" << name << "\" cannot be used to create a valid ROS topic name. Try renaming it in QTM.");
+    throw e;
+  }
   return;
 }
 
