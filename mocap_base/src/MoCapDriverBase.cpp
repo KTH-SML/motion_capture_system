@@ -127,7 +127,7 @@ void Subject::processNewMeasurement(
   }
 
   // Transform matrix from parent to child frame
-  Isometry3d tf_parent2child = Isometry3d(Translation3d(m_position) * m_attitude);
+  Isometry3d tf_parent2child = Isometry3d(Translation3d(m_position) * m_attitude).inverse();
 
   status = TRACKED;
   // Perfrom the kalman filter
@@ -142,7 +142,7 @@ void Subject::processNewMeasurement(
   tf::quaternionEigenToMsg(kFilter.attitude, odom_filter.pose.pose.orientation);
   tf::pointEigenToMsg(kFilter.position, odom_filter.pose.pose.position);
   // Transform twist to child frame
-  tf::vectorEigenToMsg(tf_parent2child.linear() * kFilter.angular_vel, odom_filter.twist.twist.angular);
+  tf::vectorEigenToMsg(kFilter.angular_vel, odom_filter.twist.twist.angular);
   tf::vectorEigenToMsg(tf_parent2child.linear() * kFilter.linear_vel, odom_filter.twist.twist.linear);
   // To be compatible with the covariance in ROS, we have to do some shifting
   Map<Matrix<double, 6, 6, RowMajor> > pose_cov(odom_filter.pose.covariance.begin());
